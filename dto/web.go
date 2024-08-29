@@ -1,0 +1,59 @@
+package dto
+
+import "gorm.io/gorm"
+
+type Response struct {
+	Code    int         `json:"code"`
+	Status  string      `json:"status"`
+	Message string      `json:"message,omitempty"`
+	Data    interface{} `json:"data,omitempty"`
+	Meta    *Meta       `json:"meta,omitempty"`
+	TraceID string      `json:"trace_id"`
+}
+
+type Error struct {
+	Code    int         `json:"code"`
+	Status  string      `json:"status"`
+	Errors  interface{} `json:"errors,omitempty"`
+	TraceID string      `json:"trace_id"`
+}
+
+type Paging struct {
+	TotalRecord int `json:"total_record"`
+	PageCurrent int `json:"page_current"`
+	PageLimit   int `json:"page_limit"`
+	PageTotal   int `json:"page_total"`
+}
+
+type Meta struct {
+	Limit     int `json:"limit"`
+	Page      int `json:"page"`
+	TotalData int `json:"total_data"`
+	TotalPage int `json:"total_page"`
+}
+
+func Paginate(page int, limit int) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		if page <= 0 {
+			page = 1
+		}
+
+		switch {
+		case limit > 100:
+			limit = 100
+		case limit <= 0:
+			limit = 10
+		}
+		offset := (page - 1) * limit
+		return db.Offset(offset).Limit(limit)
+	}
+}
+
+type GeneralQueryFilter struct {
+	Page     int    `query:"page"`
+	Limit    int    `query:"limit" validate:"required"`
+	Query    string `query:"q"`
+	Mode     string `query:"mode"`
+	Sort     string `query:"sort"`
+	IsActive int    `query:"is_active"`
+}
